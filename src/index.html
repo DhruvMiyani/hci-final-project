@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pedal Pulse</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <img src="images.png" alt="Blue Bikes Logo" id="logo">
+      <h1>Pedal Pulse</h1>
+    </header>
+
+    <main>
+      <section class="search-section">
+        <h2>Find Station Demand</h2>
+        <p>Enter ZIP Code</p>
+        <!-- Input field for zip code -->
+        <input type="text" id="zip-input" placeholder="Enter ZIP Code">
+        <p>Select your Station</p>
+        <!-- Station Dropdown (will be populated dynamically) -->
+        <select id="station-dropdown" style="display: none;">
+          <!-- Station options will be dynamically populated -->
+        </select>
+      </section>
+
+      <section class="results-section">
+        <div>
+          <label for="next-hour-result">The estimated number of bikes available at your station in the next hour:</label>
+          <input type="text" id="next-hour-result" readonly style="display: none;">
+        </div>
+      </section>
+    </main>
+  </div>
+
+
+  <script src="script.js"></script> 
+</body>
+</html>
