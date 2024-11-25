@@ -1,10 +1,3 @@
 
-
-## Code Structure 
-├── src/           # Source code for the pipeline
-│   ├── index.html   # Main HTML file for the user interface
-│   ├── styles.css   # CSS file for styling the application
-│   ├── script.js    # JavaScript file for dynamic functionality
-├── models/        # Directory for storing trained model artifacts
-├── tests/         # Directory containing unit and integration tests
-└── requirements.txt  # File specifying all project dependencies
+### Code Structure
+<img width="616" alt="Screenshot 2024-11-25 at 12 43 34 AM" src="https://github.com/user-attachments/assets/df7133c8-877f-4b41-bbb1-0b1822268fed">
