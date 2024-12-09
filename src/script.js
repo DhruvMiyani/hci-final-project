@@ -1,4 +1,4 @@
-// Station data
+// Station data// Station data
 const stationData = [
   { number: 'L32001', name: "Railroad Lot and Minuteman Bikeway", zip: "02174", docks: 11.0 },
   { number: 'L32002', name: "Linwood St at Minuteman Bikeway", zip: "02474", docks: 11.0 },
@@ -493,55 +493,96 @@ const stationData = [
   { number: 'TBD6', name: "1515 Commonwealth Ave", zip: "02134", docks: 0 },
 ];
 
-
 // DOM elements
 const zipInput = document.getElementById("zip-input");
+const spokenZipElement = document.getElementById("spoken-zip");
 const stationDropdown = document.getElementById("station-dropdown");
 const nextHourResult = document.getElementById("next-hour-result");
+const startButton = document.getElementById("start-voice-button");
 
-// Variable to store user's zip code
-let user_zipcode = '';
+// Variable to store user's ZIP code
+let user_zipcode = "";
 
 // Text-to-Speech function
 function speakText(text, callback) {
-  speechSynthesis.cancel();
+  speechSynthesis.cancel(); // Stop any ongoing speech
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.onend = () => {
-    console.log("Speech finished.");
-    if (callback) {
-      callback();
+  console.log(`Speaking: "${text}"`);
+
+  const checkVoicesLoaded = () => {
+    const voices = speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      utterance.voice = voices.find((voice) => voice.lang === "en-US") || voices[0];
+
+      utterance.onend = () => {
+        console.log("Speech finished.");
+        if (callback) callback();
+      };
+
+      utterance.onerror = (e) => {
+        console.error("Speech synthesis error:", e);
+        if (callback) callback(); // Continue even if there's an error
+      };
+
+      speechSynthesis.speak(utterance);
+    } else {
+      console.error("No voices available yet. Retrying...");
+      setTimeout(checkVoicesLoaded, 100); // Retry after a short delay
     }
   };
-  speechSynthesis.speak(utterance);
+
+  checkVoicesLoaded();
 }
+
+// Initialize voices on page load
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Page loaded. Initializing voices...");
+  speechSynthesis.getVoices(); // Trigger loading of voices
+});
 
 // Speech Recognition function
 function startSpeechRecognition(callback) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
+    console.error("SpeechRecognition API not supported.");
     speakText("Sorry, your browser does not support speech recognition.");
     return;
   }
+
   const recognition = new SpeechRecognition();
   recognition.lang = "en-US";
+
   recognition.onresult = (event) => {
     const spokenText = event.results[0][0].transcript;
+    console.log(`Speech recognized: "${spokenText}"`);
     callback(spokenText);
   };
+
   recognition.onerror = (event) => {
-    speakText("Sorry, I didn't catch that. Please try again.");
     console.error("Speech recognition error:", event.error);
+    speakText("Sorry, I didn't catch that. Please try again.");
   };
+
+  recognition.onend = () => {
+    console.log("Speech recognition ended.");
+  };
+
   recognition.start();
+  console.log("Speech recognition started.");
 }
 
 // Main Function
 function startVoiceInteraction() {
-  // Step 1: Prompt the user to speak their zip code
-  speakText("Please speak your 5-digit zip code after the beep.", () => {
+  speakText("Please speak your 5-digit ZIP code after the beep.", () => {
     startSpeechRecognition((spokenZip) => {
       const zipCode = spokenZip.replace(/\D/g, ""); // Remove non-numeric characters
-      if (/^\d{5}$/.test(zipCode)) {
+      console.log(`Speech recognized: "${spokenZip}"`);
+      console.log(`Spoken ZIP Code after processing: ${zipCode}`);
+
+      // Check if the zip code is valid (5 digits)
+      if (zipCode.length === 5) {
+        // Display spoken ZIP code dynamically on the page
+        spokenZipElement.textContent = `Spoken ZIP Code: ${zipCode}`;
         user_zipcode = zipCode; // Store in user_zipcode variable
         zipInput.value = zipCode; // Fill in the zip-input field
         const filteredStations = stationData.filter((station) => station.zip === zipCode);
@@ -549,60 +590,35 @@ function startVoiceInteraction() {
         if (filteredStations.length > 0) {
           populateStations(filteredStations);
 
-          // Show the station dropdown
           stationDropdown.style.display = "block";
 
-          // Step 2: Read station options aloud one by one
-          let index = 0;
-          function readNextStation() {
-            if (index < filteredStations.length) {
-              speakText(`${index + 1}. ${filteredStations[index].name}`, () => {
-                index++;
-                readNextStation();
-              });
-            } else {
-              // After reading all stations, ask for user's choice
-              speakText("Please say the number of your chosen station after the beep.", () => {
-                startSpeechRecognition((stationChoice) => {
-                  const stationIndex = parseInt(stationChoice, 10) - 1;
-                  if (stationIndex >= 0 && stationIndex < filteredStations.length) {
-                    const selectedStation = filteredStations[stationIndex];
-                    stationDropdown.selectedIndex = stationIndex;
+          // Event listener for dropdown selection
+          stationDropdown.addEventListener("change", () => {
+            const selectedIndex = stationDropdown.selectedIndex;
+            if (selectedIndex > 0) { // Ensure a valid selection
+              const selectedOption = stationDropdown.options[selectedIndex];
+              const selectedStationName = selectedOption.textContent.split('. ')[1];
+              const selectedStation = stationData.find(station => station.name === selectedStationName);
 
-                    // Save the user's choice number
-                    const userChoiceNumber = stationIndex + 1;
+              if (selectedStation) {
+                const docks = selectedStation.docks;
+                console.log(`Selected Station: ${selectedStation.name}, Docks: ${docks}`);
 
-                    // Proceed to calculate bike demand
-                    speakText(`You selected ${selectedStation.name}. Calculating bike demand...`, () => {
-                      // Step 4: Calculate bike demand
-                      const bikeDemand = Math.floor(Math.random() * selectedStation.docks);
+                // Generate a random dock number
+                const randomDockNumber = Math.floor(Math.random() * docks) + 1;
 
-                      // Display the result in the text box
-                      nextHourResult.value = bikeDemand;
-                      nextHourResult.style.display = "block"; // Show the result field
-
-                      // Speak the estimated number of bikes
-                      speakText(`The estimated number of bikes available at your station in the next hour is ${bikeDemand}.`);
-                    });
-                  } else {
-                    speakText("Invalid choice. Please try again.");
-                    // Restart station selection
-                    readNextStation();
-                  }
-                });
-              });
+                // Display the result in the text box
+                nextHourResult.value = `Dock Number: ${randomDockNumber}`;
+                nextHourResult.style.display = "block"; // Show the result field
+              }
             }
-          }
-          readNextStation(); // Start reading stations
+          });
         } else {
-          speakText("No stations found for this zip code. Please try again.");
-          // Restart the interaction
-          startVoiceInteraction();
+          speakText("No stations found for this ZIP code. Please try again.");
         }
       } else {
-        speakText("Invalid zip code. Please speak a 5-digit zip code.");
-        // Restart the interaction
-        startVoiceInteraction();
+        spokenZipElement.textContent = `Invalid ZIP Code: ${zipCode}`;
+        speakText("Invalid ZIP code. Please speak a 5-digit ZIP code.");
       }
     });
   });
@@ -610,19 +626,18 @@ function startVoiceInteraction() {
 
 // Populate Station Dropdown
 function populateStations(stations) {
-  stationDropdown.innerHTML = ""; // Clear existing options
+  stationDropdown.innerHTML = "<option>Select a station</option>"; // Default option
   stations.forEach((station, index) => {
     const option = document.createElement("option");
     option.value = station.name;
     option.textContent = `${index + 1}. ${station.name}`;
     stationDropdown.appendChild(option);
   });
+  console.log("Stations populated in dropdown.");
 }
 
-// Start interaction on window load
-window.onload = () => {
-  setTimeout(() => {
-    console.log("Starting voice interaction.");
-    startVoiceInteraction();
-  }, 1000); // Wait 1 second before starting the voice interaction
-};
+// Attach click event to the button
+startButton.addEventListener("click", () => {
+  console.log("Start Voice Interaction button clicked");
+  startVoiceInteraction();
+});
