@@ -603,8 +603,6 @@ function startVoiceInteraction() {
               if (selectedStation) {
                 const docks = selectedStation.docks;
                 console.log(`Selected Station: ${selectedStation.name}, Docks: ${docks}`);
-
-                // Generate a random dock number
                 const randomDockNumber = Math.floor(Math.random() * docks) + 1;
 
                 // Display the result in the text box
