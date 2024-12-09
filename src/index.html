@@ -14,11 +14,13 @@
     </header>
 
     <main>
+      <button id="start-voice-button">Start Voice Interaction</button>
       <section class="search-section">
         <h2>Find Station Demand</h2>
         <p>Enter ZIP Code</p>
         <!-- Input field for zip code -->
         <input type="text" id="zip-input" placeholder="Enter ZIP Code">
+        <p id="spoken-zip" style="color: blue; font-weight: bold;"></p>
         <p>Select your Station</p>
         <!-- Station Dropdown (will be populated dynamically) -->
         <select id="station-dropdown" style="display: none;">
